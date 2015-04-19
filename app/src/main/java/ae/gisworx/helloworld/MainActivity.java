@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
 import com.esri.android.map.event.OnSingleTapListener;
 import com.esri.android.map.event.OnStatusChangedListener;
 import com.esri.android.map.osm.OpenStreetMapLayer;
@@ -22,7 +23,11 @@ import com.esri.core.symbol.PictureMarkerSymbol;
 public class MainActivity extends ActionBarActivity implements OnStatusChangedListener, OnSingleTapListener, LocationListener {
 
     MapView mMapView;
-    boolean gotLocation=false;
+    boolean gotLocation = false;
+    GraphicsLayer graphicsLayer;
+
+    OpenStreetMapLayer openStreetMapLayer;
+    ArcGISTiledMapServiceLayer satelliteMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,8 +37,13 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
         //binding map to xml
         mMapView = (MapView) findViewById(R.id.map);
 
-        //add open street map as the basemap
-        mMapView.addLayer(new OpenStreetMapLayer());
+        //initialize the open street map as the basemap
+        openStreetMapLayer = new OpenStreetMapLayer();
+
+        //initialize the basemap layer
+        satelliteMap = new ArcGISTiledMapServiceLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
+
+        mMapView.addLayer(openStreetMapLayer);
 
         //add listener to check the status of map
         mMapView.setOnStatusChangedListener(this);
@@ -55,7 +65,19 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
+        //remove the old layer
+        mMapView.removeLayer(0);
+
+        if (id == R.id.street) {
+
+            //add the street layer again
+            mMapView.addLayer(openStreetMapLayer,0);
+            return true;
+
+        } else if (id == R.id.base) {
+
+            //addd the satelite layer to the basemap
+            mMapView.addLayer(satelliteMap,0);
             return true;
         }
 
@@ -84,17 +106,19 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
     }
 
     @Override
-    public void onSingleTap(float v, float v2) {
+    public void onSingleTap(float x, float y) {
+
         Toast.makeText(this, "Hello map", Toast.LENGTH_SHORT).show();
+
     }
 
     @Override
     public void onLocationChanged(Location location) {
 
-        if(!gotLocation){
+        if (!gotLocation) {
             Toast.makeText(this, "Got the current location...", Toast.LENGTH_SHORT).show();
             mMapView.zoomToScale(mMapView.getLocationDisplayManager().getPoint(), mMapView.getMaxScale());
-            gotLocation=true;
+            gotLocation = true;
         }
 
     }
@@ -107,11 +131,10 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
         Graphic graphic = new Graphic(point, pictureMarkerSymbol);
 
         //initialize a graphic layer
-        GraphicsLayer graphicsLayer=new GraphicsLayer(GraphicsLayer.RenderingMode.DYNAMIC);
+        GraphicsLayer graphicsLayer = new GraphicsLayer(GraphicsLayer.RenderingMode.DYNAMIC);
         mMapView.addLayer(graphicsLayer);
 
         graphicsLayer.addGraphic(graphic);
-
 
 
     }

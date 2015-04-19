@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">helloworld</string>
+    <string name="app_name">Hello GISWORX!</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="street_txt">street</string>
+    <string name="satellite_txt">satellite</string>
 </resources>
