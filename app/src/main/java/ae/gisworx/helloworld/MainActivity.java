@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.esri.android.map.GraphicsLayer;
@@ -25,6 +27,7 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
     MapView mMapView;
     boolean gotLocation = false;
     GraphicsLayer graphicsLayer;
+    Button gpsButton;
 
     OpenStreetMapLayer openStreetMapLayer;
     ArcGISTiledMapServiceLayer satelliteMap;
@@ -36,6 +39,9 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
 
         //binding map to xml
         mMapView = (MapView) findViewById(R.id.map);
+
+        //gps button
+        gpsButton = (Button) findViewById(R.id.gps_button);
 
         //initialize the open street map as the basemap
         openStreetMapLayer = new OpenStreetMapLayer();
@@ -51,6 +57,21 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
 
         //add a listener to check tapping on the map
         mMapView.setOnSingleTapListener(this);
+
+        //add pinch to rotation
+        mMapView.setAllowRotationByPinch(true);
+
+        //add magnifier glass capability
+        mMapView.setShowMagnifierOnLongPress(true);
+
+        gpsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mMapView.getLocationDisplayManager().getPoint() != null)
+                    mMapView.zoomToScale(mMapView.getLocationDisplayManager().getPoint(), mMapView.getMaxScale());
+
+            }
+        });
 
 
     }
@@ -96,9 +117,11 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
 
                 Toast.makeText(this, "map loaded", Toast.LENGTH_SHORT).show();
 
-                //start the location manager
+                //start the location manager to current location
                 mMapView.getLocationDisplayManager().setLocationListener(this);
                 mMapView.getLocationDisplayManager().start();
+
+                gpsButton.setVisibility(View.VISIBLE);
 
                 //show the venue point
                 showVenuePoint();
@@ -115,12 +138,12 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
 
         try {
             //find graphic ids around a particular point
-            int ids[] = graphicsLayer.getGraphicIDs(x, y, 30);
+            int ids[] = graphicsLayer.getGraphicIDs(x, y, 30,1);
 
             //get graphic from graphic id
             Graphic graphic = graphicsLayer.getGraphic(ids[0]);
             if (graphic != null) {
-                Toast.makeText(this, "Tapped on point with id:" + graphic.getUid(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Tapped on a point", Toast.LENGTH_SHORT).show();
             }
 
         } catch (Exception e) {
