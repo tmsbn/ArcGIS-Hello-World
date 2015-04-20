@@ -43,12 +43,13 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
         //initialize the basemap layer
         satelliteMap = new ArcGISTiledMapServiceLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
 
+        //add open street map layer
         mMapView.addLayer(openStreetMapLayer);
 
         //add listener to check the status of map
         mMapView.setOnStatusChangedListener(this);
 
-        //add a listener to check device on-tap
+        //add a listener to check tapping on the map
         mMapView.setOnSingleTapListener(this);
 
 
@@ -65,19 +66,23 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
+        //If there are no layers, return
+        if (mMapView.getLayers().length == 0)
+            return true;
+
         //remove the old layer
         mMapView.removeLayer(0);
 
         if (id == R.id.street) {
 
             //add the street layer again
-            mMapView.addLayer(openStreetMapLayer,0);
+            mMapView.addLayer(openStreetMapLayer, 0);
             return true;
 
         } else if (id == R.id.base) {
 
-            //addd the satelite layer to the basemap
-            mMapView.addLayer(satelliteMap,0);
+            //add the satellite layer to the basemap
+            mMapView.addLayer(satelliteMap, 0);
             return true;
         }
 
@@ -89,7 +94,6 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
         if (object == mMapView) {
             if (status == STATUS.INITIALIZED) {
 
-                //
                 Toast.makeText(this, "map loaded", Toast.LENGTH_SHORT).show();
 
                 //start the location manager
@@ -100,7 +104,7 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
                 showVenuePoint();
 
             } else if (status == STATUS.INITIALIZATION_FAILED) {
-
+                Toast.makeText(this, "could not load map!", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -108,8 +112,22 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
     @Override
     public void onSingleTap(float x, float y) {
 
-        Toast.makeText(this, "Hello map", Toast.LENGTH_SHORT).show();
 
+        try {
+            //find graphic ids around a particular point
+            int ids[] = graphicsLayer.getGraphicIDs(x, y, 30);
+
+            //get graphic from graphic id
+            Graphic graphic = graphicsLayer.getGraphic(ids[0]);
+            if (graphic != null) {
+                Toast.makeText(this, "Tapped on point with id:" + graphic.getUid(), Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (Exception e) {
+
+            Toast.makeText(this, "Tapped on map", Toast.LENGTH_SHORT).show();
+
+        }
     }
 
     @Override
@@ -131,7 +149,7 @@ public class MainActivity extends ActionBarActivity implements OnStatusChangedLi
         Graphic graphic = new Graphic(point, pictureMarkerSymbol);
 
         //initialize a graphic layer
-        GraphicsLayer graphicsLayer = new GraphicsLayer(GraphicsLayer.RenderingMode.DYNAMIC);
+        graphicsLayer = new GraphicsLayer(GraphicsLayer.RenderingMode.DYNAMIC);
         mMapView.addLayer(graphicsLayer);
 
         graphicsLayer.addGraphic(graphic);
